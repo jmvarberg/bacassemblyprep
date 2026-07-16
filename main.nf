@@ -12,8 +12,7 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-include { BACASSEMBLYPREP  } from './workflows/bacassemblyprep'
+include { BACASSEMBLYPREP       } from './workflows/bacassemblyprep'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -29,13 +28,14 @@ workflow JMVARBERG_BACASSEMBLYPREP {
     samplesheet // channel: samplesheet read in from --input
 
     main:
-
+    samplesheet.view { "ENTRY SAMPLESHEET: $it (${it.getClass()})" }
     //
     // WORKFLOW: Run pipeline
     //
     BACASSEMBLYPREP (
         samplesheet
     )
+
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,8 +51,9 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     JMVARBERG_BACASSEMBLYPREP (
-        params.input
+        Channel.fromPath(params.input)
     )
+
 }
 
 /*
