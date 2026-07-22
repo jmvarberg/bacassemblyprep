@@ -1,9 +1,5 @@
 # jmvarberg/bacassemblyprep
-
-
-[![GitHub Actions CI Status](https://github.com/jmvarberg/bacassemblyprep/actions/workflows/nf-test.yml/badge.svg)](https://github.com/jmvarberg/bacassemblyprep/actions/workflows/nf-test.yml)
-[![GitHub Actions Linting Status](https://github.com/jmvarberg/bacassemblyprep/actions/workflows/linting.yml/badge.svg)](https://github.com/jmvarberg/bacassemblyprep/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
-[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
+[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
 [![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
 [![nf-core template version](https://img.shields.io/badge/nf--core_template-3.5.1-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/3.5.1)
@@ -14,13 +10,9 @@
 
 ## Introduction
 
-**jmvarberg/bacassemblyprep** is a bioinformatics pipeline that ...
+**jmvarberg/bacassemblyprep** is a bioinformatics pipeline that stages and prepares sequencing data for analysis using nf-core/bacass. The primary feature is to collect and concatenate data from ONT long-read sequencing projects that contain multiple input __fastq.gz__ files per isolate/sequencing run. Once combined, basic statistics are calculated using 'seqkit stats' to calculate a predicted coverage value. These are optionally used to filter the list of isolates for a minimum predicted coverage and to generate a sample sheet ready for submission using nf-core/bacass.
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+__IN DEVELOPMENT:__ This pipeline also generates an output CSV file that can be uploaded to a Shiny app (in development) that can serve as a dashboard to track large sequencing projects, generate basic plots to monitor number of samples sequenced, fraction passing quality thresholds, and interactively generate nf-core/bacass input sample sheets. 
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
@@ -31,19 +23,23 @@
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. 
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
-
 First, prepare a samplesheet with your input data that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+RunID,Isolate,Type,Data
+1,Ecoli_isolate_001,ONT,path_to_file_or_directory
+
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents an individual sequencing run, and is referenced by a unique RunID integer value. The Isolate column should contain the unique identifier for the sample/isolate sequenced. Type column should contain values of either 'ONT' for long-read, or 'SR' for short-read/Illumina sequencing data. These values will only be used to properly format the samplesheet generated so that it is compatible with nf-core/bacass.
+
+The Data column should contain a full file path specifying where to find the sequencing data for that run. These paths can resolve to individual fastq(.gz) files, or to a directory containing multiple fastq.gz files for that run (for example, the path to 'barcode01' from an ONT run). If Data is a directory and multiple fastq.gz files are found within, they will be concatenated into a single 'combined.fastq.gz' file.
+
+The pipeline is built to handle multiple independent runs of the same Isolate. To disambiguate, the processed fastq.gz files are copied locally to the 'staged_fastqs' subdirectory (default location at "params.outdir/results/staged_fastqs"), and are re-named with unique names formatted as "[RunID]_[Isolate]_[TYPE]_[combined.fastq.gz|fastq.gz]", with 'combined' added to any samples that had multiple input files concatenated.
+
+By default, the pipeline assumes that the fastq files require concatenation/staging. If this is not the case (i.e., all input files are single fastq.gz files), you can set the parameters 'skip_staging true' to tell the pipeline to skip the pre-processing/staging steps. You will also need to provide the path to the directry containing all of the fastq.gz files ready for processing to input 'staged_dir'.
 
 -->
 
@@ -55,7 +51,9 @@ Now, you can run the pipeline using:
 nextflow run jmvarberg/bacassemblyprep \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
-   --outdir <OUTDIR>
+   --outdir <OUTDIR> \
+   --min_coverage 50 \
+   --genome_size 5100000
 ```
 
 > [!WARNING]
