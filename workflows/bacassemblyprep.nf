@@ -63,27 +63,29 @@ workflow BACASSEMBLYPREP {
     Channel.fromPath(path_to_staged_dir.toString(), type: 'dir')
         .set { ch_staged_dir }
 
-    //View check the ch_staged_dir
-    ch_staged_dir.view { "CH_STAGED_DIR: ${it}" }
-
     //-------------
     // Step 2: QC with Seqkit stats. Runs seqkit stats and combines into single output.
     //-------------
+
+    //Modify ch_fastqs output meta.id structure to avoid filename collisions downstream.
+    ch_fastqs = ch_fastqs
+        .map { meta, fastq ->
+            def filename = fastq.simpleName
+            tuple([id: filename], fastq)
+        }
+
     SEQKIT_STATS(ch_fastqs)
 
     ch_stats = SEQKIT_STATS.out.stats
         .map { meta, tsv -> tsv }
         .collect()
 
-    //ch_stats.view { "CHECK CH_STATS: ${it}"}
 
     COMBINE_SEQKIT_STATS(ch_stats)
 
     //-------------
     // Step 3: Automatically Generate Sample Sheet that is ready to use to submit/run nf-core/bacass
     //-------------
-
-
 
     GENERATE_SAMPLESHEET(
         ch_staged_dir,
