@@ -7,7 +7,7 @@ include { PARSE_SAMPLESHEET     } from '../subworkflows/local/parse_samplesheet'
 include { STAGE_FASTQS          } from '../modules/local/stage_fastqs'
 include { SEQKIT_STATS          } from '../modules/nf-core/seqkit/stats'
 include { COMBINE_SEQKIT_STATS  } from '../modules/local/combine_seqkit_stats'
-//include { CREATE_SHINY_INPUT_R  } from '../modules/local/create_shiny_input_r'
+include { GENERATE_SAMPLESHEET  } from '../modules/local/samplesheets'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -22,33 +22,49 @@ workflow BACASSEMBLYPREP {
     main:
 
     //Check input channel
-    ch_samplesheet.view { "BACASSEMBLY INPUT: $it (${it.getClass()})" }
+    //ch_samplesheet.view { "BACASSEMBLY INPUT: $it (${it.getClass()})" }
+
+    //Set channel for path to staged FASTQs - use provided if skipping staging, or set to default if not.
+    def path_to_staged_dir 
 
     //------------------
     // Step 1: Parse Input Samplesheet, stage files if needed, generate channel of fastq files ready for analysis
     //------------------
 
-    //parse input sample sheet and generate channel for analysis. If skip_staging true, use files present in staged_dir directly, otherwise, stage them using STAGE_FASTQS
+    //parse input sample sheet and generate channel for analysis. 
+    //If skip_staging true, use files present in staged_dir directly, otherwise, stage them using STAGE_FASTQS
     if (!params.skip_staging) {
+        
         ch_samples = PARSE_SAMPLESHEET(ch_samplesheet)
         STAGE_FASTQS(ch_samples)
         ch_fastqs = STAGE_FASTQS.out.processed_fastq
+        
+        //If staging files, then use the default staging output directory 
+        path_to_staged_dir = "${params.outdir}/staged_fastqs"
+
     }
     else {
+        //if skip_staging = true, check for staged_dir. If not provided, error out.
         if (!params.staged_dir)
             error "skip_staging=true but --staged_dir was not provided."
 
-        def staged = file(params.staged_dir, checkIfExists: true)
+        //if provided, confirm that the directory exists
+        path_to_staged_dir = file(params.staged_dir, checkIfExists: true)
 
-        ch_fastqs = channel.fromPath("${staged}/*.fastq.gz", checkIfExists: true)
-            .ifEmpty { error "No .fastq.gz files in staged_dir: ${staged}" }
+        //Once confirmed, create ch_fastqs from fastq files in staged_dir, error if none found
+        ch_fastqs = Channel.fromPath("${path_to_staged_dir}/*.fastq.gz", checkIfExists: true)
+            .ifEmpty { error "No .fastq.gz files in staged_dir: ${path_to_staged_dir}" }
             .map { fastq ->
                 tuple([id: fastq.simpleName], fastq )
             }
     }
 
-    //View to check the fastq channel
-    //ch_fastqs.view {"FASTQS CHANNEL: ${it}"}
+    //Create a single Channel for the staged directory for downstream process use
+    Channel.fromPath(path_to_staged_dir.toString(), type: 'dir')
+        .set { ch_staged_dir }
+
+    //View check the ch_staged_dir
+    ch_staged_dir.view { "CH_STAGED_DIR: ${it}" }
 
     //-------------
     // Step 2: QC with Seqkit stats. Runs seqkit stats and combines into single output.
@@ -63,7 +79,19 @@ workflow BACASSEMBLYPREP {
 
     COMBINE_SEQKIT_STATS(ch_stats)
 
+    //-------------
+    // Step 3: Automatically Generate Sample Sheet that is ready to use to submit/run nf-core/bacass
+    //-------------
 
+
+
+    GENERATE_SAMPLESHEET(
+        ch_staged_dir,
+        COMBINE_SEQKIT_STATS.out.combined_seqkit_stats,
+        ch_samplesheet,
+        params.genome_size.toInteger(),
+        params.min_cov.toInteger()
+    )
 
 }
 

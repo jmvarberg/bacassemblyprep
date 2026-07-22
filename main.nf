@@ -28,7 +28,7 @@ workflow JMVARBERG_BACASSEMBLYPREP {
     samplesheet // channel: samplesheet read in from --input
 
     main:
-    samplesheet.view { "ENTRY SAMPLESHEET: $it (${it.getClass()})" }
+
     //
     // WORKFLOW: Run pipeline
     //

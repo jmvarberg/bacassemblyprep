@@ -5,7 +5,6 @@ workflow PARSE_SAMPLESHEET {
     main:
     ch_samples = ch_samplesheet
         .splitCsv(header: true)
-        .view { row -> "ROW KEYS: " + row.keySet() }
         .map { row ->
             def run_id  = row['RunID']
             def isolate = row['Isolate']

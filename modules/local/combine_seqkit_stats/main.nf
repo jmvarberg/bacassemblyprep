@@ -19,12 +19,13 @@ process COMBINE_SEQKIT_STATS {
     script:
     """
     set -euo pipefail
+    first_file=\$(ls ${stats_files} | head -n 1)
 
-    # Write header once
-    echo -e "file\\tformat\\ttype\\tnum_seqs\\tsum_len\\tmin_len\\tavg_len\\tmax_len" > combined_seqkit_stats.tsv
+    {
+        head -n 1 "\$first_file"
+        awk 'FNR > 1' ${stats_files}
+    } > combined_seqkit_stats.tsv
 
-    # Append all rows, skipping each file's header
-    awk 'FNR>1' ${stats_files} >> combined_seqkit_stats.tsv
     """
 
     stub:
