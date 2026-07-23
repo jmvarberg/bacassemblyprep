@@ -31,12 +31,18 @@ stats_mod <- stats |>
 
 write.csv(stats_mod, "modified_seqkit_stats.csv", row.names = F)
 
+str(stats_mod)
+
+str(input_log)
+
 #merge seqkit stats with input log using RunID
 input_with_stats <- input_log |>
 	dplyr::left_join(stats_mod, by = "RunID") |>
 	dplyr::mutate(
 		genome_size   = as.integer(genome_size),
 		predicted_cov = round(sum_len / genome_size, digits = 2))
+
+str(input_with_stats)
 
 write.csv(input_with_stats, "bacprep_log_shiny_input.csv", row.names = FALSE)
 
