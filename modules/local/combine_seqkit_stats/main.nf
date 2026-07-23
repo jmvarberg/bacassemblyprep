@@ -3,33 +3,26 @@ process COMBINE_SEQKIT_STATS {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/52/52ccce28d2ab928ab862e25aae26314d69c8e38bd41ca9431c67ef05221348aa/data'
-        : 'community.wave.seqera.io/library/coreutils_grep_gzip_lbzip2_pruned:838ba80435a629f8'}"
+    container "${workflow.containerEngine == 'singularity' && !(task.ext.singularity_pull_docker_container ?: false) 
+			? 'oras://community.wave.seqera.io/library/r-base_r-data.table_r-dplyr_r-stringr:9418abefbed22a4d'
+			: 'community.wave.seqera.io/library/r-base_r-data.table_r-dplyr_r-stringr:5897cbde71ea29a5'}"
 
     input:
     path(stats_files)
 
     output:
-    path("combined_seqkit_stats.tsv"), emit: combined_seqkit_stats
+    path("combined_seqkit_stats.csv"), emit: combined_seqkit_stats
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     """
-    set -euo pipefail
-    first_file=\$(ls ${stats_files} | head -n 1)
-
-    {
-        head -n 1 "\$first_file"
-        awk 'FNR > 1' ${stats_files}
-    } > combined_seqkit_stats.tsv
-
+    combined_seqkit_stats.R ${stats_files.join(' ')}
     """
 
     stub:
     """
-    touch combined_seqkit_stats.tsv
+    touch combined_seqkit_stats.csv
     """
 }

@@ -77,9 +77,10 @@ workflow BACASSEMBLYPREP {
     SEQKIT_STATS(ch_fastqs)
 
     ch_stats = SEQKIT_STATS.out.stats
-        .map { meta, tsv -> tsv }
-        .collect()
-
+       .map { meta, tsv -> tsv}
+       .collect()
+    
+    ch_stats.view {"DEBUG: CHECK GROUPTUPLE: ${it}"}
 
     COMBINE_SEQKIT_STATS(ch_stats)
 
@@ -87,13 +88,13 @@ workflow BACASSEMBLYPREP {
     // Step 3: Automatically Generate Sample Sheet that is ready to use to submit/run nf-core/bacass
     //-------------
 
-    GENERATE_SAMPLESHEET(
-        ch_staged_dir,
-        COMBINE_SEQKIT_STATS.out.combined_seqkit_stats,
-        ch_samplesheet,
-        params.genome_size.toInteger(),
-        params.min_cov.toInteger()
-    )
+    // GENERATE_SAMPLESHEET(
+    //     ch_staged_dir,
+    //     COMBINE_SEQKIT_STATS.out.combined_seqkit_stats,
+    //     ch_samplesheet,
+    //     params.genome_size.toInteger(),
+    //     params.min_cov.toInteger()
+    // )
 
 }
 
