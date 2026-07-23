@@ -17,7 +17,7 @@ print(length(args))
 
 stats
 
-out <- stats |> dplyr::bind_rows(.id = "file")
+out <- stats |> dplyr::bind_rows(.id = "file") |> dplyr::arrange(file)
 
 out
 
