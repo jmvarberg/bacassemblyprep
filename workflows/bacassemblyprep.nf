@@ -79,8 +79,6 @@ workflow BACASSEMBLYPREP {
     ch_stats = SEQKIT_STATS.out.stats
        .map { meta, tsv -> tsv}
        .collect()
-    
-    ch_stats.view {"DEBUG: CHECK GROUPTUPLE: ${it}"}
 
     COMBINE_SEQKIT_STATS(ch_stats)
 
