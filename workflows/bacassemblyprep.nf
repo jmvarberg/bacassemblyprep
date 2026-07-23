@@ -77,9 +77,8 @@ workflow BACASSEMBLYPREP {
     SEQKIT_STATS(ch_fastqs)
 
     ch_stats = SEQKIT_STATS.out.stats
-        .map { meta, tsv -> tsv }
-        .collect()
-
+       .map { meta, tsv -> tsv}
+       .collect()
 
     COMBINE_SEQKIT_STATS(ch_stats)
 
