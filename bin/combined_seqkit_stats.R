@@ -15,10 +15,6 @@ names(stats) <- basename(args)
 print("Number of stats files: ")
 print(length(args))
 
-stats
-
 out <- stats |> dplyr::bind_rows(.id = "file") |> dplyr::arrange(file)
-
-out
 
 write.csv(out, "./combined_seqkit_stats.csv", row.names = F)
