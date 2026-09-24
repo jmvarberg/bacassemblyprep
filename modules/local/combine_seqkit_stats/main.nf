@@ -4,8 +4,9 @@ process COMBINE_SEQKIT_STATS {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !(task.ext.singularity_pull_docker_container ?: false) 
-			? 'oras://community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr:82f35acaa4ed55f2'
-			: 'community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr:0d3602e3799a6467'}"
+			? 'oras://community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_r-scales:54d43f99629f6388'
+			: 'community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_r-scales:f2a2307db2a5e69f'}"
+            
     input:
     path(stats_files)
 

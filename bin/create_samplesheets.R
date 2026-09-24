@@ -11,6 +11,7 @@ suppressPackageStartupMessages({
 		library(dplyr)
 		library(data.table)
 		library(stringr)
+		library(scales)
 	}
 	)
 
@@ -35,8 +36,11 @@ write.csv(stats_mod, "modified_seqkit_stats.csv", row.names = F)
 input_with_stats <- input_log |>
 	dplyr::left_join(stats_mod, by = "RunID") |>
 	dplyr::mutate(
-		genome_size   = as.integer(genome_size),
-		predicted_cov = round(sum_len / genome_size, digits = 2))
+		genome_size = as.integer(genome_size),
+		genome_size_keep   = tolower(scales::label_number_si(genome_size)),
+		predicted_cov = round(sum_len / genome_size, digits = 2)) |>
+	dplyr::select(-genome_size) |>
+	dplyr::rename(genome_size = genome_size_keep)
 
 write.csv(input_with_stats, "bacprep_log_shiny_input.csv", row.names = FALSE)
 
