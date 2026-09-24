@@ -32,12 +32,18 @@ stats_mod <- stats |>
 
 write.csv(stats_mod, "modified_seqkit_stats.csv", row.names = F)
 
+#function for formatting genomesize for Canu
+fmt_genome_size <- scales::label_number(
+	accuracy = 0.1,
+	scale_cut = scales::cut_short_scale()
+)
+
 #merge seqkit stats with input log using RunID
 input_with_stats <- input_log |>
 	dplyr::left_join(stats_mod, by = "RunID") |>
 	dplyr::mutate(
 		genome_size = as.integer(genome_size),
-		genome_size_keep   = tolower(scales::label_number_si(genome_size)),
+		genome_size_keep = tolower(fmt_genome_size(genome_size)),
 		predicted_cov = round(sum_len / genome_size, digits = 2)) |>
 	dplyr::select(-genome_size) |>
 	dplyr::rename(genome_size = genome_size_keep)
