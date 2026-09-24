@@ -5,8 +5,8 @@ process GENERATE_SAMPLESHEET {
 
 	conda "${moduleDir}/environment.yml"
 	container "${workflow.containerEngine == 'singularity' && !(task.ext.singularity_pull_docker_container ?: false) 
-			? 'oras://community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_r-stringr:c0d029696a9beea8'
-			: 'community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_r-stringr:4c966b2cd1cec0b2'}"
+			? 'oras://community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_pruned:417885dcef2e06b6'
+			: 'community.wave.seqera.io/library/r-base_r-bit64_r-data.table_r-dplyr_pruned:32500e3a4dd4491c'}"
 
 	input:
 	val(staged_dir)
